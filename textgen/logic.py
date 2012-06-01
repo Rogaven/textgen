@@ -3,8 +3,92 @@ import os
 import json
 import numbers
 
-from textgen.exceptions import TextgenException
+from textgen.exceptions import NoGrammarFound
 from textgen.conf import textgen_settings
+
+class PROPERTIES(object):
+    CASES = (u'им', u'рд', u'дт', u'вн', u'тв', u'пр')
+    ANIMACYTIES = (u'од', u'но')
+    NUMBERS = (u'ед', u'мн')
+    GENDERS = (u'мр', u'жр', u'ср') # REMBER about 'мн' case in pymorphy
+    TIMES = (u'нст', u'прш', u'буд')
+    PERSONS = (u'1л', u'2л', u'3л')
+
+    @classmethod
+    def is_argument_available(cls, arg):
+        return (arg in cls.CASES or
+                arg in cls.ANIMACYTIES or
+                arg in cls.NUMBERS or
+                arg in cls.GENDERS or
+                arg in cls.TIMES or
+                arg in cls.PERSONS)
+
+
+class Args(object):
+
+    __slots__ = ('case', 'number', 'gender', 'time', 'person')
+
+    def __init__(self, *args):
+        self.case = u'им'
+        self.number = u'ед'
+        self.gender = u'мр'
+        self.time = u'нст'
+        self.person = u'1л'
+        self.update(*args)
+
+    def get_copy(self):
+        return self.__class__(self.case, self.number, self.gender, self.time, self.person)
+
+    def update(self, *args):
+        for arg in args:
+            if arg in PROPERTIES.CASES:
+                self.case = arg
+            elif arg in PROPERTIES.NUMBERS:
+                self.number = arg
+            elif arg in PROPERTIES.GENDERS:
+                self.gender = arg
+            elif arg in PROPERTIES.TIMES:
+                self.time = arg
+            elif arg in PROPERTIES.PERSONS:
+                self.person = arg
+
+        # if world exists only in multiple number (ножницы) there will be 2 u'мн' values - one for gender and one for number
+        if args.count(u'мн') > 1:
+            self.gender = u'мн'
+
+    # order: time, case, time, gender
+    # - прш, ед, мр
+    # - прш, ед|мр
+    # - прш
+    # - им, ед, мр
+    # - им, ед|мр
+    # - им
+    @property
+    def order_points(self):
+        points = 0
+
+        if self.time == u'прш': points += 1
+        points *=2
+
+        if self.case == u'им': points += 1
+        points *= 2
+
+        if self.time == u'мн': points += 1
+        points *= 2
+
+        if self.gender == u'мр': points += 1
+
+        return points
+
+    def has_priority(self, other):
+        return self.order_points > other.order_points
+
+
+    def __unicode__(self):
+        return (u'<%s, %s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time, self.person)).encode('utf-8')
+
+    def __str__(self): return self.__unicode__()
+
 
 
 def efication(word):
@@ -12,29 +96,27 @@ def efication(word):
 
 def get_gram_info(morph, word, tech_vocabulary={}):
     normalized = word.lower()
+    class_ = None
     if tech_vocabulary.get(normalized):
         class_ = tech_vocabulary[word.lower()] # TODO: ???
-    else:
-        gram_info = morph.get_graminfo(word.upper())
 
-        classes = set([info['class'] for info in gram_info])
-
-        if len(classes) > 1:
-            raise TextgenException(u'more then one grammar info for word: %s' % word)
-
-        if not classes:
-            raise TextgenException(u'can not find info about word: "%s"' % word)
-
-        class_ = list(classes)[0]
-
-    properties = ()
+    properties = None
     for info in morph.get_graminfo(word.upper()):
+
+        if class_ and info['class'] != class_:
+            continue
+
         if u'имя' in info['info']:
             continue
-        if info['class'] == class_:
-            properties = tuple(info['info'].split(','))
 
-            break #TODO: stop of most common form ("им" for nouns)
+        current_properties = Args(*info['info'].split(','))
+
+        if not properties or not properties.has_priority(current_properties):
+            properties = current_properties
+            class_ = info['class']
+
+    if not class_:
+        raise NoGrammarFound(u'can not find info about word: "%s"' % word)
 
     return class_, properties
 

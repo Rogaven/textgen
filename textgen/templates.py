@@ -6,8 +6,8 @@ import random
 import json
 
 from textgen.exceptions import TextgenException
-from textgen.words import Args, WordBase, Fake, Numeral, PROPERTIES
-from textgen.logic import efication, get_gram_info
+from textgen.words import WordBase, Fake, Numeral
+from textgen.logic import efication, Args, PROPERTIES
 
 class Dictionary(object):
 
@@ -118,9 +118,9 @@ class Template(object):
             str_id = subsitute_pattern % i
             src = src.replace(word_macros, '%%(%s)s' % str_id)
 
-            if is_internal:
-                source = efication(id_.upper())
-                class_, properties = get_gram_info(morph, source, tech_vocabulary)
+            # if is_internal:
+            #     source = efication(id_.upper())
+            #     class_, properties = get_gram_info(morph, source, tech_vocabulary)
 
             arguments = tuple(args.split(u','))
             if arguments == (u'',):

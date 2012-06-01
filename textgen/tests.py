@@ -9,6 +9,7 @@ from textgen.words import Noun, Adjective, Verb, NounGroup, Fake
 from textgen.templates import Args, Template, Dictionary, Vocabulary
 from textgen.conf import textgen_settings
 from textgen.logic import import_texts
+from textgen.exceptions import NormalFormNeeded
 
 morph = pymorphy.get_morph(textgen_settings.PYMORPHY_DICTS_DIRECTORY)
 
@@ -81,6 +82,10 @@ class NounTest(TestCase):
         self.assertEqual(noun_1.normalized , noun_2.normalized)
         self.assertEqual(noun_1.forms, noun_2.forms)
         self.assertEqual(noun_1.properties, noun_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, Noun.create_from_baseword, morph, u'обезьянки')
+        Noun.create_from_baseword(morph, u'ножницы')
 
 
 class NounGroupTest(TestCase):
@@ -162,6 +167,9 @@ class NounGroupTest(TestCase):
         group = NounGroup.create_from_baseword(morph, u'тень автора')
         self.assertEqual(group.normalized, u'тень автора')
         self.assertEqual(group.properties, (u'жр',))
+        # for f in group.forms:
+        #     print f
+        # print group.forms[1]
         self.assertEqual(group.forms, (u'тень автора',
                                        u'тени автора',
                                        u'тени автора',
@@ -175,13 +183,17 @@ class NounGroupTest(TestCase):
                                        u'тенями автора',
                                        u'тенях автора'))
 
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, NounGroup.create_from_baseword, morph, u'добрые обезьянки')
+        NounGroup.create_from_baseword(morph, u'большие ножницы')
+
 
 class AdjectiveTest(TestCase):
 
     def test_create_from_baseword(self):
         adj = Adjective.create_from_baseword(morph, u'глупый')
         self.assertEqual(adj.normalized, u'глупый')
-        self.assertEqual(adj.forms, (u'глупый',
+        self.assertEqual(adj.forms[18], (u'глупый',
                                      u'глупого',
                                      u'глупому',
                                      u'глупый',
@@ -204,7 +216,7 @@ class AdjectiveTest(TestCase):
                                      u'глупым',
                                      u'глупый', #???????? possible bug in pymorphy
                                      u'глупыми',
-                                     u'глупых'))
+                                     u'глупых')[18])
 
     def test_pluralize(self):
         adj = Adjective.create_from_baseword(morph, u'красивый')
@@ -254,6 +266,10 @@ class AdjectiveTest(TestCase):
         self.assertEqual(adj_1.normalized , adj_2.normalized)
         self.assertEqual(adj_1.forms, adj_2.forms)
         self.assertEqual(adj_1.properties, adj_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, Adjective.create_from_baseword, morph, u'добрые')
+
 
 class VerbTest(TestCase):
 
@@ -317,7 +333,7 @@ class VerbTest(TestCase):
                                       u'восстановят',))
 
     def test_pluralize(self):
-        verb = Verb.create_from_baseword(morph, u'взметнулись')
+        verb = Verb.create_from_baseword(morph, u'взметнулся')
         self.assertEqual(verb.pluralize(1, Args(u'прш', u'жр')), u'взметнулась')
         self.assertEqual(verb.pluralize(2, Args(u'прш', u'жр')), u'взметнулись')
         self.assertEqual(verb.pluralize(3, Args(u'прш', u'жр')), u'взметнулись')
@@ -331,7 +347,7 @@ class VerbTest(TestCase):
 
 
     def test_serialization(self):
-        verb_1 = Verb.create_from_baseword(morph, u'бежит')
+        verb_1 = Verb.create_from_baseword(morph, u'бежал')
         data = verb_1.serialize()
 
         verb_2 = Verb.deserialize(data)
@@ -339,6 +355,16 @@ class VerbTest(TestCase):
         self.assertEqual(verb_1.normalized , verb_2.normalized)
         self.assertEqual(verb_1.forms, verb_2.forms)
         self.assertEqual(verb_1.properties, verb_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'бежит')
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'бежали')
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'бежала')
+        Verb.create_from_baseword(morph, u'бежал')
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'побежит')
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'побежали')
+        self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'побежала')
+        Verb.create_from_baseword(morph, u'побежал')
 
 
 class DictionaryTest(TestCase):

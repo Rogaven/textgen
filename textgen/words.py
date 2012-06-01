@@ -1,7 +1,7 @@
 # coding: utf-8
 
-from textgen.exceptions import TextgenException
-from textgen.logic import efication, get_gram_info
+from textgen.exceptions import TextgenException, NormalFormNeeded, NoGrammarFound
+from textgen.logic import efication, get_gram_info, PROPERTIES
 
 class WORD_TYPE:
     NOUN = 1
@@ -19,58 +19,6 @@ WORD_TYPES_IDS_TO_WORD_TYPES = {'сущ': WORD_TYPE.NOUN,
                                 'фальш': WORD_TYPE.FAKE}
 
 WORD_CONSTRUCTORS = {}
-
-class PROPERTIES(object):
-    CASES = (u'им', u'рд', u'дт', u'вн', u'тв', u'пр')
-    ANIMACYTIES = (u'од', u'но')
-    NUMBERS = (u'ед', u'мн')
-    GENDERS = (u'мр', u'жр', u'ср')
-    TIMES = (u'нст', u'прш', u'буд')
-    PERSONS = (u'1л', u'2л', u'3л')
-
-    @classmethod
-    def is_argument_available(cls, arg):
-        return (arg in cls.CASES or
-                arg in cls.ANIMACYTIES or
-                arg in cls.NUMBERS or
-                arg in cls.GENDERS or
-                arg in cls.TIMES or
-                arg in cls.PERSONS)
-
-
-class Args(object):
-
-    __slots__ = ('case', 'number', 'gender', 'time', 'person')
-
-    def __init__(self, *args):
-        self.case = u'им'
-        self.number = u'ед'
-        self.gender = u'мр'
-        self.time = u'нст'
-        self.person = u'1л'
-        self.update(*args)
-
-    def get_copy(self):
-        return self.__class__(self.case, self.number, self.gender, self.time, self.person)
-
-    def update(self, *args):
-        for arg in args:
-            if arg in PROPERTIES.CASES:
-                self.case = arg
-            elif arg in PROPERTIES.NUMBERS:
-                self.number = arg
-            elif arg in PROPERTIES.GENDERS:
-                self.gender = arg
-            elif arg in PROPERTIES.TIMES:
-                self.time = arg
-            elif arg in PROPERTIES.PERSONS:
-                self.person = arg
-
-    def __unicode__(self):
-        return u'<%s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time)
-
-    def __str__(self): return self.__unicode__()
-
 
 class WordBase(object):
 
@@ -191,8 +139,11 @@ class Noun(WordBase):
         normalized = efication(src.upper())
         try:
             class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
-        except TextgenException:
+        except NoGrammarFound:
             return cls(normalized=src)
+
+        if u'им' != properties.case or (u'ед' != properties.number and properties.gender in (u'мр', u'ср', u'жр')):
+            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
 
         forms = []
 
@@ -200,19 +151,7 @@ class Noun(WordBase):
             for case in PROPERTIES.CASES:
                 forms.append(morph.inflect_ru(normalized, u'%s,%s' % (case, number), class_ ).lower() )
 
-
-        gram_info = morph.get_graminfo(normalized.upper())[0]
-
-        info = gram_info['info']
-
-        if u'мр' in info:
-            properties = [u'мр']
-        elif u'ср' in info:
-            properties = [u'ср']
-        else:
-            properties = [u'жр']
-
-        return cls(normalized=src, forms=forms, properties=properties)
+        return cls(normalized=src, forms=forms, properties=[properties.gender])
 
 
 class Numeral(WordBase):
@@ -271,8 +210,11 @@ class Adjective(WordBase):
         normalized = efication(src.upper())
         try:
             class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
-        except TextgenException:
+        except NoGrammarFound:
             return cls(normalized=src)
+
+        if u'им' != properties.case or u'ед' != properties.number:
+            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
 
         forms = []
 
@@ -334,8 +276,11 @@ class Verb(WordBase):
         normalized = efication(src.upper())
         try:
             class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
-        except TextgenException:
+        except NoGrammarFound:
             return cls(normalized=src)
+
+        if u'прш' != properties.time or u'ед' != properties.number or u'мр' != properties.gender:
+            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
 
         base = morph.inflect_ru(normalized, u'ед,мр', u'Г')
 
@@ -370,42 +315,39 @@ class NounGroup(Noun):
         there are problems with nouns in multiple number: рога
         '''
         main_noun = None
+        main_properties = None
 
         phrase = []
         for word in src.split(' '):
             if word:
                 try:
                     class_, properties = get_gram_info(morph, efication(word.upper()), tech_vocabulary)
-                except TextgenException:
+                except NoGrammarFound:
                     return cls(normalized=src)
 
                 if class_ == u'С':
-                    if u'им' in properties:
+                    if u'им' == properties.case:
+
+                        if u'им' != properties.case or (u'ед' != properties.number and properties.gender in (u'мр', u'ср', u'жр')):
+                            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
                         main_noun = word
+                        main_properties = properties
                         phrase.append((class_, efication(word).upper(), False))
                     else:
                         phrase.append((class_, efication(word).upper(), True))
                 else:
                     phrase.append((class_, efication(word).upper(), False))
 
-        gram_info = morph.get_graminfo(main_noun.upper())[0]
-
-        info = gram_info['info']
-
-        if u'мр' in info:
-            properties = [u'мр']
-        elif u'ср' in info:
-            properties = [u'ср']
-        else:
-            properties = [u'жр']
+        if not main_noun:
+            raise TextgenException('no main noun found in phrase "%s"' % src)
 
         forms = []
 
         for number in PROPERTIES.NUMBERS:
 
             additional_properties = []
-            if number == u'ед':
-                additional_properties = properties
+            # if number == u'ед':
+            #     additional_properties = [properties.gender]
 
             for case in PROPERTIES.CASES:
                 phrase_form = []
@@ -417,7 +359,7 @@ class NounGroup(Noun):
                         phrase_form.append(morph.inflect_ru(word, u','.join([case, number]+additional_properties), class_ ).lower())
                 forms.append( ' '.join(phrase_form))
 
-        return cls(normalized=src, forms=forms, properties=properties)
+        return cls(normalized=src, forms=forms, properties=[main_properties.gender])
 
 
 
