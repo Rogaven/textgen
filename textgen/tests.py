@@ -15,7 +15,7 @@ morph = pymorphy.get_morph(textgen_settings.PYMORPHY_DICTS_DIRECTORY)
 class NounTest(TestCase):
 
     def test_create_from_baseword(self):
-        noun = Noun.create_from_baseword(morph, u'обезьянками')
+        noun = Noun.create_from_baseword(morph, u'обезьянка')
         self.assertEqual(noun.normalized, u'обезьянка')
         self.assertEqual(noun.properties, (u'жр',))
         self.assertEqual(noun.forms, (u'обезьянка',
@@ -32,7 +32,7 @@ class NounTest(TestCase):
                                       u'обезьянках'))
 
     def test_pluralize(self):
-        noun = Noun.create_from_baseword(morph, u'монеты')
+        noun = Noun.create_from_baseword(morph, u'монета')
         self.assertEqual(noun.normalized, u'монета')
         self.assertEqual(noun.pluralize(1, Args()), u'монета')
         self.assertEqual(noun.pluralize(2, Args()), u'монеты')
@@ -68,12 +68,12 @@ class NounTest(TestCase):
         self.assertEqual(noun.pluralize(36, Args(u'тв')), u'монетами')
 
     def test_get_form(self):
-        noun = Noun.create_from_baseword(morph, u'обезьянками')
+        noun = Noun.create_from_baseword(morph, u'обезьянка')
         self.assertEqual(noun.get_form(Args(u'рд', u'мн')), u'обезьянок')
         self.assertEqual(noun.get_form(Args(u'дт')), u'обезьянке')
 
     def test_serialization(self):
-        noun_1 = Noun.create_from_baseword(morph, u'обезьянками')
+        noun_1 = Noun.create_from_baseword(morph, u'обезьянка')
         data  = noun_1.serialize()
 
         noun_2 = Noun.deserialize(data)
@@ -179,7 +179,7 @@ class NounGroupTest(TestCase):
 class AdjectiveTest(TestCase):
 
     def test_create_from_baseword(self):
-        adj = Adjective.create_from_baseword(morph, u'глупыми')
+        adj = Adjective.create_from_baseword(morph, u'глупый')
         self.assertEqual(adj.normalized, u'глупый')
         self.assertEqual(adj.forms, (u'глупый',
                                      u'глупого',
@@ -246,7 +246,7 @@ class AdjectiveTest(TestCase):
 
 
     def test_serialization(self):
-        adj_1 = Adjective.create_from_baseword(morph, u'обезьянками')
+        adj_1 = Adjective.create_from_baseword(morph, u'обезьянка')
         data = adj_1.serialize()
 
         adj_2 = Adjective.deserialize(data)
@@ -259,7 +259,7 @@ class VerbTest(TestCase):
 
     def test_create_from_baseword(self):
         verb = Verb.create_from_baseword(morph, u'говорил')
-        self.assertEqual(verb.normalized, u'говорить')
+        self.assertEqual(verb.normalized, u'говорил')
         self.assertEqual(verb.forms, (u'говорил',
                                       u'говорила',
                                       u'говорило',
@@ -278,7 +278,7 @@ class VerbTest(TestCase):
                                       u'говорил',))
 
         verb = Verb.create_from_baseword(morph, u'поговорил')
-        self.assertEqual(verb.normalized, u'поговорить')
+        self.assertEqual(verb.normalized, u'поговорил')
         self.assertEqual(verb.forms, (u'поговорил',
                                       u'поговорила',
                                       u'поговорило',
@@ -298,7 +298,7 @@ class VerbTest(TestCase):
 
     def test_word_recover(self):
         verb = Verb.create_from_baseword(morph, u'восстановил')
-        self.assertEqual(verb.normalized, u'восстановить')
+        self.assertEqual(verb.normalized, u'восстановил')
         self.assertEqual(verb.forms, (u'восстановил',
                                       u'восстановила',
                                       u'восстановило',
@@ -344,8 +344,8 @@ class VerbTest(TestCase):
 class DictionaryTest(TestCase):
 
     def setUp(self):
-        self.monkey = Noun.create_from_baseword(morph, u'обезьянками')
-        self.silly = Adjective.create_from_baseword(morph, u'глупая')
+        self.monkey = Noun.create_from_baseword(morph, u'обезьянка')
+        self.silly = Adjective.create_from_baseword(morph, u'глупый')
         self.hit = Verb.create_from_baseword(morph, u'ударил')
 
     def test_create(self):
@@ -357,7 +357,7 @@ class DictionaryTest(TestCase):
 
         self.assertEqual(dictionary.get_word(u'обезьянка'), self.monkey)
         self.assertEqual(dictionary.get_word(u'глупый'), self.silly)
-        self.assertEqual(dictionary.get_word(u'ударить'), self.hit)
+        self.assertEqual(dictionary.get_word(u'ударил'), self.hit)
 
     def test_serialization(self):
 
@@ -375,7 +375,7 @@ class DictionaryTest(TestCase):
 
             self.assertEqual(dictionary.get_word(u'обезьянка').normalized, u'обезьянка')
             self.assertEqual(dictionary.get_word(u'глупый').normalized, u'глупый')
-            self.assertEqual(dictionary.get_word(u'ударить').normalized, u'ударить')
+            self.assertEqual(dictionary.get_word(u'ударил').normalized, u'ударил')
 
 
 class VocabularyTest(TestCase):
@@ -453,7 +453,7 @@ class TemplateTest(TestCase):
 
 
     def test_internals(self):
-        template = Template.create(morph, u'[{тенью|hero|тв}] [[hero|рд]]')
+        template = Template.create(morph, u'[{тень|hero|тв}] [[hero|рд]]')
         self.assertEqual(template.substitute(self.dictionary, {'hero': (u'обезьянка', u'мн')} ), u'тенями обезьянок')
 
     def test_noun_dependences(self):
@@ -510,10 +510,10 @@ class TemplateTest(TestCase):
         template = Template.create(morph, u'[{глупый|hero|рд}] [[hero|рд]]')
         self.assertEqual(template.substitute(self.dictionary, {'hero': u'обезьянка'} ), u'глупой обезьянки')
 
-        template = Template.create(morph, u'враг [{ударила|hero|буд,3л}] [[hero|вн]]')
+        template = Template.create(morph, u'враг [{ударил|hero|буд,3л}] [[hero|вн]]')
         self.assertEqual(template.substitute(self.dictionary, {'hero': u'обезьянка'} ), u'враг ударит обезьянку')
 
-        template = Template.create(morph, u'крыса [{ударить|прш,жр}] [[hero|вн]]')
+        template = Template.create(morph, u'крыса [{ударил|прш,жр}] [[hero|вн]]')
         self.assertEqual(template.substitute(self.dictionary, {'hero': u'обезьянка'} ), u'крыса ударила обезьянку')
 
 

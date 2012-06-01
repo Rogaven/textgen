@@ -14,7 +14,10 @@ class Dictionary(object):
     def __init__(self):
         self.data = {}
 
-    def add_word(self, word):
+    def add_word(self, word, overwrite=False):
+        if not overwrite and word.normalized in self.data:
+            # TODO: add test
+            return
         self.data[word.normalized] = word
 
     def get_word(self, normalized):
@@ -117,16 +120,13 @@ class Template(object):
 
             if is_internal:
                 source = efication(id_.upper())
-                class_, normalized, properties = get_gram_info(morph, source, tech_vocabulary)
-                normalized = normalized.lower()
-            else:
-                normalized = id_
+                class_, properties = get_gram_info(morph, source, tech_vocabulary)
 
             arguments = tuple(args.split(u','))
             if arguments == (u'',):
                 arguments = ()
 
-            words.append((normalized, dependences, str_id, arguments, id_))
+            words.append((id_, dependences, str_id, arguments, id_))
 
         return src, words
 

@@ -1,5 +1,6 @@
 # coding: utf-8
 import os
+import json
 import numbers
 
 from textgen.exceptions import TextgenException
@@ -10,8 +11,9 @@ def efication(word):
     return word.replace(u'Ё', u'Е').replace(u'ё', u'е')
 
 def get_gram_info(morph, word, tech_vocabulary={}):
-    if word.lower() in tech_vocabulary:
-        class_ = tech_vocabulary[word.lower()]
+    normalized = word.lower()
+    if tech_vocabulary.get(normalized):
+        class_ = tech_vocabulary[word.lower()] # TODO: ???
     else:
         gram_info = morph.get_graminfo(word.upper())
 
@@ -25,18 +27,16 @@ def get_gram_info(morph, word, tech_vocabulary={}):
 
         class_ = list(classes)[0]
 
-    normalized = None
     properties = ()
     for info in morph.get_graminfo(word.upper()):
         if u'имя' in info['info']:
             continue
         if info['class'] == class_:
-            normalized = info['norm']
             properties = tuple(info['info'].split(','))
 
-            break # stop of most common form ("им" for nouns)
+            break #TODO: stop of most common form ("им" for nouns)
 
-    return class_, normalized, properties
+    return class_, properties
 
 
 def get_tech_vocabulary():
@@ -45,7 +45,7 @@ def get_tech_vocabulary():
         tech_vocabulary = {}
     else:
         with open(tech_vocabulary_file_name) as f:
-            tech_vocabulary = s11n.from_json(f.read())
+            tech_vocabulary = json.loads(f.read())
     return tech_vocabulary
 
 
@@ -61,10 +61,9 @@ def import_texts(morph, voc_storage, dict_storage, debug=False):
 
     tech_vocabulary = get_tech_vocabulary()
 
-    with open(os.path.join(textgen_settings.TEXTS_DIRECTORY, 'words.txt')) as f:
-        for string in f:
-            word = WordBase.create_from_string(morph, string.decode('utf-8').strip(), tech_vocabulary)
-            dictionary.add_word(word)
+    for word in tech_vocabulary.keys():
+        word = WordBase.create_from_string(morph, word.strip(), tech_vocabulary)
+        dictionary.add_word(word)
 
     for filename in os.listdir(textgen_settings.TEXTS_DIRECTORY):
 
@@ -85,7 +84,7 @@ def import_texts(morph, voc_storage, dict_storage, debug=False):
             print 'load %s' % group
 
         with open(texts_path) as f:
-            data = s11n.from_json(f.read())
+            data = json.loads(f.read())
 
             if group != data['prefix']:
                 raise Exception('filename MUST be equal to prefix')

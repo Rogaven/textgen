@@ -11,6 +11,13 @@ class WORD_TYPE:
     NOUN_GROUP = 5
     FAKE = 6
 
+WORD_TYPES_IDS_TO_WORD_TYPES = {'сущ': WORD_TYPE.NOUN,
+                                'прил': WORD_TYPE.ADJECTIVE,
+                                'гл': WORD_TYPE.VERB,
+                                'числ': WORD_TYPE.NUMERAL,
+                                'сущ гр': WORD_TYPE.NOUN_GROUP,
+                                'фальш': WORD_TYPE.FAKE}
+
 WORD_CONSTRUCTORS = {}
 
 class PROPERTIES(object):
@@ -69,7 +76,7 @@ class WordBase(object):
 
     TYPE = None
 
-    def __init__(self, normalized, forms, properties):
+    def __init__(self, normalized, forms=[], properties=()):
         self.normalized = normalized
         self.forms = tuple(forms)
         self.properties = tuple(properties)
@@ -98,7 +105,7 @@ class WordBase(object):
         if ' ' in string:
             return WORD_CONSTRUCTORS[WORD_TYPE.NOUN_GROUP].create_from_baseword(morph, string, tech_vocabulary)
 
-        class_, normalized, properties = get_gram_info(morph, normalized, tech_vocabulary)
+        class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
 
         if class_ == u'С':
             return WORD_CONSTRUCTORS[WORD_TYPE.NOUN].create_from_baseword(morph, string, tech_vocabulary)
@@ -134,10 +141,10 @@ class Fake(WordBase):
     TYPE = WORD_TYPE.FAKE
 
     def __init__(self, word):
-        super(Fake, self).__init__(normalized=word.lower(), forms=[word], properties=())
+        super(Fake, self).__init__(normalized=word.lower())
 
     def get_form(self, args):
-        return self.forms[0]
+        return self.normalized
 
     @classmethod
     def pluralize_args(cls, number, args):
@@ -155,6 +162,8 @@ class Noun(WordBase):
     def gender(self): return self.properties[0]
 
     def get_form(self, args):
+        if not self.forms:
+            return self.normalized
         return self.forms[PROPERTIES.NUMBERS.index(args.number) * len(PROPERTIES.CASES) + PROPERTIES.CASES.index(args.case)]
 
     @classmethod
@@ -179,7 +188,11 @@ class Noun(WordBase):
 
     @classmethod
     def create_from_baseword(cls, morph, src, tech_vocabulary={}):
-        class_, normalized, properties = get_gram_info(morph, efication(src.upper()), tech_vocabulary)
+        normalized = efication(src.upper())
+        try:
+            class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
+        except TextgenException:
+            return cls(normalized=src)
 
         forms = []
 
@@ -187,7 +200,8 @@ class Noun(WordBase):
             for case in PROPERTIES.CASES:
                 forms.append(morph.inflect_ru(normalized, u'%s,%s' % (case, number), class_ ).lower() )
 
-        gram_info = morph.get_graminfo(normalized)[0]
+
+        gram_info = morph.get_graminfo(normalized.upper())[0]
 
         info = gram_info['info']
 
@@ -198,17 +212,18 @@ class Noun(WordBase):
         else:
             properties = [u'жр']
 
-        return cls(normalized=normalized.lower(), forms=forms, properties=properties)
+        return cls(normalized=src, forms=forms, properties=properties)
+
 
 class Numeral(WordBase):
 
     TYPE = WORD_TYPE.NUMERAL
 
     def __init__(self, number):
-        super(Numeral, self).__init__(normalized=number, forms=[number], properties=[])
+        super(Numeral, self).__init__(normalized=number)
 
     def get_form(self, args):
-        return self.forms[0]
+        return self.normalized
 
     def update_args(self, arguments, dependence, dependence_args):
         pass
@@ -219,6 +234,9 @@ class Adjective(WordBase):
     TYPE = WORD_TYPE.ADJECTIVE
 
     def get_form(self, args):
+        if not self.forms:
+            return self.normalized
+
         if args.number == u'ед':
             return self.forms[PROPERTIES.GENDERS.index(args.gender) * len(PROPERTIES.CASES) + PROPERTIES.CASES.index(args.case)]
         else:
@@ -250,7 +268,12 @@ class Adjective(WordBase):
 
     @classmethod
     def create_from_baseword(cls, morph, src, tech_vocabulary={}):
-        class_, normalized, properties = get_gram_info(morph, efication(src.upper()), tech_vocabulary)
+        normalized = efication(src.upper())
+        try:
+            class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
+        except TextgenException:
+            return cls(normalized=src)
+
         forms = []
 
         # single
@@ -262,7 +285,7 @@ class Adjective(WordBase):
         for case in PROPERTIES.CASES:
             forms.append(morph.inflect_ru(normalized, u'%s,%s' % (case, u'мн'), class_).lower() )
 
-        return cls(normalized=normalized.lower(), forms=forms, properties=[])
+        return cls(normalized=src, forms=forms, properties=[])
 
 
 class Verb(WordBase):
@@ -270,6 +293,8 @@ class Verb(WordBase):
     TYPE = WORD_TYPE.VERB
 
     def get_form(self, args):
+        if not self.forms:
+            return self.normalized
 
         if args.time == u'прш':
             if args.number == u'мн':
@@ -306,9 +331,13 @@ class Verb(WordBase):
 
     @classmethod
     def create_from_baseword(cls, morph, src, tech_vocabulary={}):
-        class_, normalized, properties = get_gram_info(morph, efication(src.upper()), tech_vocabulary)
+        normalized = efication(src.upper())
+        try:
+            class_, properties = get_gram_info(morph, normalized, tech_vocabulary)
+        except TextgenException:
+            return cls(normalized=src)
 
-        base = morph.inflect_ru(efication(src.upper()), u'ед,мр', u'Г')
+        base = morph.inflect_ru(normalized, u'ед,мр', u'Г')
 
         forms = [morph.inflect_ru(base, u'прш,мр,ед').lower(),
                  morph.inflect_ru(base, u'прш,жр,ед').lower(),
@@ -327,7 +356,7 @@ class Verb(WordBase):
                  morph.inflect_ru(base, u'буд,3л,ед').lower(),
                  morph.inflect_ru(base, u'буд,3л,мн').lower()]
 
-        return cls(normalized=normalized.lower(), forms=forms, properties=[])
+        return cls(normalized=src, forms=forms, properties=[])
 
 
 class NounGroup(Noun):
@@ -345,11 +374,15 @@ class NounGroup(Noun):
         phrase = []
         for word in src.split(' '):
             if word:
-                class_, norm, properties = get_gram_info(morph, efication(word.upper()), tech_vocabulary)
+                try:
+                    class_, properties = get_gram_info(morph, efication(word.upper()), tech_vocabulary)
+                except TextgenException:
+                    return cls(normalized=src)
+
                 if class_ == u'С':
                     if u'им' in properties:
-                        main_noun = norm
-                        phrase.append((class_, norm, False))
+                        main_noun = word
+                        phrase.append((class_, efication(word).upper(), False))
                     else:
                         phrase.append((class_, efication(word).upper(), True))
                 else:
@@ -384,9 +417,7 @@ class NounGroup(Noun):
                         phrase_form.append(morph.inflect_ru(word, u','.join([case, number]+additional_properties), class_ ).lower())
                 forms.append( ' '.join(phrase_form))
 
-        normalized = ' '.join([word for class_, word, constant in phrase])
-
-        return cls(normalized=normalized.lower(), forms=forms, properties=properties)
+        return cls(normalized=src, forms=forms, properties=properties)
 
 
 
