@@ -3,7 +3,7 @@ import os
 import json
 import numbers
 
-from textgen.exceptions import NoGrammarFound
+from textgen.exceptions import NoGrammarFound, TextgenException
 from textgen.conf import textgen_settings
 
 class PROPERTIES(object):
@@ -121,17 +121,16 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     return class_, properties
 
 
-def get_tech_vocabulary():
-    tech_vocabulary_file_name = os.path.join(textgen_settings.TEXTS_DIRECTORY, 'vocabulary.json')
-    if not os.path.exists(tech_vocabulary_file_name):
+def get_tech_vocabulary(tech_vocabulary_path):
+    if not os.path.exists(tech_vocabulary_path):
         tech_vocabulary = {}
     else:
-        with open(tech_vocabulary_file_name) as f:
+        with open(tech_vocabulary_path) as f:
             tech_vocabulary = json.loads(f.read())
     return tech_vocabulary
 
 
-def import_texts(morph, voc_storage, dict_storage, debug=False):
+def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False):
     from textgen.templates import Dictionary, Vocabulary, Template
     from textgen.words import WordBase
 
@@ -141,21 +140,18 @@ def import_texts(morph, voc_storage, dict_storage, debug=False):
     dictionary = Dictionary()
     dictionary.load(storage=dict_storage)
 
-    tech_vocabulary = get_tech_vocabulary()
+    tech_vocabulary = get_tech_vocabulary(tech_vocabulary_path)
 
     for word in tech_vocabulary.keys():
         word = WordBase.create_from_string(morph, word.strip(), tech_vocabulary)
         dictionary.add_word(word)
 
-    for filename in os.listdir(textgen_settings.TEXTS_DIRECTORY):
+    for filename in os.listdir(source_dir):
 
         if not filename.endswith('.json'):
             continue
 
-        if filename == 'vocabulary.json':
-            continue
-
-        texts_path = os.path.join(textgen_settings.TEXTS_DIRECTORY, filename)
+        texts_path = os.path.join(source_dir, filename)
 
         if not os.path.isfile(texts_path):
             continue

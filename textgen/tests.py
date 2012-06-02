@@ -1,4 +1,5 @@
 # coding: utf-8
+import os
 import tempfile
 
 import pymorphy
@@ -7,7 +8,7 @@ from unittest import TestCase
 
 from textgen.words import Noun, Adjective, Verb, NounGroup, Fake
 from textgen.templates import Args, Template, Dictionary, Vocabulary
-from textgen.conf import textgen_settings
+from textgen.conf import APP_DIR, textgen_settings
 from textgen.logic import import_texts
 from textgen.exceptions import NormalFormNeeded
 
@@ -556,4 +557,8 @@ class LoadDataTest(TestCase):
     def test_load(self):
         with tempfile.NamedTemporaryFile(delete=False) as voc_f:
             with tempfile.NamedTemporaryFile(delete=False) as dict_f:
-                import_texts(morph, voc_storage=voc_f.name, dict_storage=dict_f.name)
+                import_texts(morph,
+                             source_dir=os.path.join(APP_DIR, 'fixtures', 'texts_src'),
+                             tech_vocabulary_path=os.path.join(APP_DIR, 'fixtures', 'vocabulary.json'),
+                             voc_storage=voc_f.name,
+                             dict_storage=dict_f.name)

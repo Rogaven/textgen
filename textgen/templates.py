@@ -18,7 +18,7 @@ class Dictionary(object):
         if not overwrite and word.normalized in self.data:
             # TODO: add test
             return
-        self.data[word.normalized] = word
+        self.data[efication(word.normalized)] = word
 
     def get_word(self, normalized):
         normalized = efication(normalized)
