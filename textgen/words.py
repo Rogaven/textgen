@@ -146,7 +146,7 @@ class Noun(WordBase):
             return cls(normalized=src)
 
         if u'им' != properties.case or (u'ед' != properties.number and properties.gender in (u'мр', u'ср', u'жр')):
-            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
+            raise NormalFormNeeded(u'word "%s" not in normal form: %s' % (src, properties))
 
         forms = []
 
@@ -217,7 +217,7 @@ class Adjective(WordBase):
             return cls(normalized=src)
 
         if u'им' != properties.case or u'ед' != properties.number:
-            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
+            raise NormalFormNeeded(u'word "%s" not in normal form: %s' % (src, properties))
 
         forms = []
 
@@ -283,7 +283,7 @@ class Verb(WordBase):
             return cls(normalized=src)
 
         if u'прш' != properties.time or u'ед' != properties.number or u'мр' != properties.gender:
-            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
+            raise NormalFormNeeded(u'word "%s" not in normal form: %s' % (src, properties))
 
         base = morph.inflect_ru(normalized, u'ед,мр', u'Г')
 
@@ -321,6 +321,7 @@ class NounGroup(Noun):
         main_properties = None
 
         phrase = []
+
         for word in src.split(' '):
             if word:
                 try:
@@ -329,10 +330,7 @@ class NounGroup(Noun):
                     return cls(normalized=src)
 
                 if class_ == u'С':
-                    if u'им' == properties.case:
-
-                        if u'им' != properties.case or (u'ед' != properties.number and properties.gender in (u'мр', u'ср', u'жр')):
-                            raise NormalFormNeeded(u'word "%s" not in normal form' % src)
+                    if u'им' == properties.case and (u'ед' == properties.number or properties.gender == u'мн'):
                         main_noun = word
                         main_properties = properties
                         phrase.append((class_, efication(word).upper(), False))
@@ -342,7 +340,8 @@ class NounGroup(Noun):
                     phrase.append((class_, efication(word).upper(), False))
 
         if not main_noun:
-            raise TextgenException('no main noun found in phrase "%s"' % src)
+            # return cls(normalized=src)
+            raise NormalFormNeeded('no main noun found in phrase "%s"' % src)
 
         forms = []
 

@@ -85,9 +85,9 @@ class Args(object):
 
 
     def __unicode__(self):
-        return (u'<%s, %s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time, self.person)).encode('utf-8')
+        return (u'<%s, %s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time, self.person))
 
-    def __str__(self): return self.__unicode__()
+    def __str__(self): return self.__unicode__().encode('utf-8')
 
 
 
@@ -99,9 +99,12 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     class_ = None
 
     if tech_vocabulary.get(normalized):
-        class_ = tech_vocabulary[word.lower()] # TODO: ???
+        class_ = tech_vocabulary[word.lower()][0] # TODO: ???
+
+    # x = (u'СВЕТЛЯЧЕК' == word)
 
     properties = None
+
     for info in morph.get_graminfo(word.upper()):
 
         if class_ and info['class'] != class_:
@@ -119,19 +122,28 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     if not class_:
         raise NoGrammarFound(u'can not find info about word: "%s"' % word)
 
+    if properties is None:
+        properties = Args()
+
+    if normalized in tech_vocabulary:
+        properties.update(*tech_vocabulary[normalized])
+
+    # if x: print class_, properties
+
     return class_, properties
 
 
 def get_tech_vocabulary(tech_vocabulary_path):
-    if not os.path.exists(tech_vocabulary_path):
-        tech_vocabulary = {}
-    else:
+    tech_vocabulary = {}
+    if os.path.exists(tech_vocabulary_path):
         with open(tech_vocabulary_path) as f:
-            tech_vocabulary = json.loads(f.read())
+            tmp_tech_vocabulary = json.loads(f.read())
+            for key, value in tmp_tech_vocabulary.items():
+                tech_vocabulary[key] = [v.strip() for v in value.split(',')]
     return tech_vocabulary
 
 
-def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False, print_undefined_words=False):
+def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False):
     from textgen.templates import Dictionary, Vocabulary, Template
     from textgen.words import WordBase
 
@@ -201,6 +213,3 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
     vocabulary.save(storage=voc_storage)
     dictionary.save(storage=dict_storage)
-
-    if print_undefined_words:
-        print 'undefined words number: %d' % len(dictionary.get_undefined_words())
