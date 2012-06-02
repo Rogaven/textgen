@@ -35,7 +35,7 @@ class Dictionary(object):
             data[norm] = word.serialize()
 
         with open(storage, 'w') as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(data, ensure_ascii=False, check_circular=True, allow_nan=False, indent=2).encode('utf-8'))
 
     def load(self, storage):
         with open(storage, 'r') as f:
@@ -46,6 +46,13 @@ class Dictionary(object):
 
         for word_data in data.values():
             self.add_word(WordBase.deserialize(word_data))
+
+    def get_undefined_words(self):
+        result = []
+        for key, word in self.data.items():
+            if not word.has_forms:
+                result.append(key)
+        return result
 
 
 class Vocabulary(object):
@@ -72,7 +79,7 @@ class Vocabulary(object):
             data[type_] = [phrase.serialize() for phrase in phrases]
 
         with open(storage, 'w') as f:
-            f.write(json.dumps(data))
+            f.write(json.dumps(data, ensure_ascii=False, check_circular=True, allow_nan=False, indent=2).encode('utf-8'))
 
     def load(self, storage):
         with open(storage, 'r') as f:

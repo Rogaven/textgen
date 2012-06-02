@@ -4,7 +4,7 @@ import json
 import numbers
 
 from textgen.exceptions import NoGrammarFound, TextgenException
-from textgen.conf import textgen_settings
+
 
 class PROPERTIES(object):
     CASES = (u'им', u'рд', u'дт', u'вн', u'тв', u'пр')
@@ -95,8 +95,9 @@ def efication(word):
     return word.replace(u'Ё', u'Е').replace(u'ё', u'е')
 
 def get_gram_info(morph, word, tech_vocabulary={}):
-    normalized = word.lower()
+    normalized = efication(word.lower())
     class_ = None
+
     if tech_vocabulary.get(normalized):
         class_ = tech_vocabulary[word.lower()] # TODO: ???
 
@@ -130,15 +131,18 @@ def get_tech_vocabulary(tech_vocabulary_path):
     return tech_vocabulary
 
 
-def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False):
+def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False, print_undefined_words=False):
     from textgen.templates import Dictionary, Vocabulary, Template
     from textgen.words import WordBase
 
     vocabulary = Vocabulary()
-    vocabulary.load(storage=voc_storage)
+
+    if os.path.exists(voc_storage):
+        vocabulary.load(storage=voc_storage)
 
     dictionary = Dictionary()
-    dictionary.load(storage=dict_storage)
+    if os.path.exists(dict_storage):
+        dictionary.load(storage=dict_storage)
 
     tech_vocabulary = get_tech_vocabulary(tech_vocabulary_path)
 
@@ -197,3 +201,6 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
     vocabulary.save(storage=voc_storage)
     dictionary.save(storage=dict_storage)
+
+    if print_undefined_words:
+        print 'undefined words number: %d' % len(dictionary.get_undefined_words())

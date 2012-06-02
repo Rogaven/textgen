@@ -32,6 +32,9 @@ class WordBase(object):
     def get_form(self, args):
         raise NotImplementedError
 
+    @property
+    def has_forms(self): return self.forms # boolean
+
     @classmethod
     def pluralize_args(cls, number, args):
         raise NotImplementedError
