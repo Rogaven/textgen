@@ -76,6 +76,10 @@ class Args(object):
         if self.time == u'мн': points += 1
         points *= 2
 
+        # priority has forms with multiply gender, like "трусы"
+        if self.gender == u'мн': points += 1
+        points *= 2
+
         if self.gender == u'мр': points += 1
 
         return points
@@ -101,7 +105,7 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     if tech_vocabulary.get(normalized):
         class_ = tech_vocabulary[word.lower()][0] # TODO: ???
 
-    # x = (u'СВЕТЛЯЧЕК' == word)
+    # x = (u'ТРУСЫ' == word)
 
     properties = None
 
@@ -112,6 +116,8 @@ def get_gram_info(morph, word, tech_vocabulary={}):
 
         if u'имя' in info['info']:
             continue
+
+        # if x: print info['info']
 
         current_properties = Args(*info['info'].split(','))
 

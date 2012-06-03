@@ -328,7 +328,7 @@ class NounGroup(Noun):
                     class_, properties = get_gram_info(morph, efication(word.upper()), tech_vocabulary)
                 except NoGrammarFound:
                     return cls(normalized=src)
-
+                # print word, class_, properties
                 if class_ == u'С':
                     if u'им' == properties.case and (u'ед' == properties.number or properties.gender == u'мн'):
                         main_noun = word
