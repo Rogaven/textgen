@@ -34,6 +34,11 @@ class Args(object):
         self.gender = u'мр'
         self.time = u'нст'
         self.person = u'1л'
+        # self.case = u''
+        # self.number = u''
+        # self.gender = u''
+        # self.time = u''
+        # self.person = u''
         self.update(*args)
 
     def get_copy(self):
@@ -57,35 +62,37 @@ class Args(object):
             self.gender = u'мн'
 
     # order: time, case, time, gender
-    # - прш, ед, мр
-    # - прш, ед|мр
-    # - прш
-    # - им, ед, мр
-    # - им, ед|мр
-    # - им
-    @property
-    def order_points(self):
-        points = 0
+    def order_points(self, class_):
+        distance = 0
 
-        if self.time == u'прш': points += 1
-        points *=2
+        if class_ == u'С':
+            if self.case != u'им': distance += 1
+            # priority has forms with multiply gender, like "трусы"
+            if self.number == u'мн' and self.gender != u'мн': distance += 1
 
-        if self.case == u'им': points += 1
-        points *= 2
+        elif class_ == u'Г':
+            if self.time != u'прш': distance += 1
+            if self.gender != u'мр': distance += 1
+            if self.number == u'мн': distance += 1
 
-        if self.time == u'мн': points += 1
-        points *= 2
+        elif class_ in (u'П', u'КР_ПРИЛ', u'МС-П'):
+            if self.case != u'им': distance += 1
+            if self.gender != u'мр': distance += 1
+            if self.number == u'мн': distance += 1
 
-        # priority has forms with multiply gender, like "трусы"
-        if self.gender == u'мн': points += 1
-        points *= 2
+        elif class_ == u'ПРИЧАСТИЕ':
+            if self.time != u'прш': distance += 1
+            if self.case != u'им': distance += 1
+            if self.gender != u'мр': distance += 1
+            if self.number == u'мн': distance += 1
 
-        if self.gender == u'мр': points += 1
+        elif class_ ==  u'ИНФИНИТИВ':
+            distance = 666 # we does not process infinitives
 
-        return points
+        else:
+            raise TextgenException(u'unknown word class: "%s"' % class_)
 
-    def has_priority(self, other):
-        return self.order_points > other.order_points
+        return distance
 
 
     def __unicode__(self):
@@ -105,11 +112,17 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     if tech_vocabulary.get(normalized):
         class_ = tech_vocabulary[word.lower()][0] # TODO: ???
 
-    # x = (u'ТРУСЫ' == word)
+    # x = (u'МЯСО' == word)
+
+    # if x: print '--------'
 
     properties = None
 
+    result_class = class_
+
     for info in morph.get_graminfo(word.upper()):
+
+        # if x: print info['class'], info['info']
 
         if class_ and info['class'] != class_:
             continue
@@ -117,15 +130,14 @@ def get_gram_info(morph, word, tech_vocabulary={}):
         if u'имя' in info['info']:
             continue
 
-        # if x: print info['info']
-
         current_properties = Args(*info['info'].split(','))
+        current_class = info['class']
 
-        if not properties or not properties.has_priority(current_properties):
+        if not properties or properties.order_points(result_class) > current_properties.order_points(current_class):
             properties = current_properties
-            class_ = info['class']
+            result_class = current_class
 
-    if not class_:
+    if not result_class:
         raise NoGrammarFound(u'can not find info about word: "%s"' % word)
 
     if properties is None:
@@ -134,9 +146,12 @@ def get_gram_info(morph, word, tech_vocabulary={}):
     if normalized in tech_vocabulary:
         properties.update(*tech_vocabulary[normalized])
 
-    # if x: print class_, properties
+    # if x:
+    #     print result_class, properties
+    #     print '******************'
 
-    return class_, properties
+
+    return result_class, properties
 
 
 def get_tech_vocabulary(tech_vocabulary_path):

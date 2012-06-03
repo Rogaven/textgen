@@ -72,7 +72,7 @@ class NounTest(TestCase):
     def test_get_form(self):
         noun = Noun.create_from_baseword(morph, u'обезьянка')
         self.assertEqual(noun.get_form(Args(u'рд', u'мн')), u'обезьянок')
-        self.assertEqual(noun.get_form(Args(u'дт')), u'обезьянке')
+        self.assertEqual(noun.get_form(Args(u'дт', u'ед')), u'обезьянке')
 
     def test_serialization(self):
         noun_1 = Noun.create_from_baseword(morph, u'обезьянка')
