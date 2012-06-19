@@ -1,6 +1,7 @@
 # coding: utf-8
 import os
 import json
+import copy
 import numbers
 
 from textgen.exceptions import NoGrammarFound, TextgenException
@@ -208,11 +209,24 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
                 if suffix == '':
                     raise Exception('type MUST be not equal to empty string')
 
+            global_variables = data.get('variables', {})
+
             for suffix, type_ in data['types'].items():
                 phrase_key = '%s_%s' % (group , suffix)
-                for phrase in type_['phrases']:
+
+                if isinstance(type_, list):
+                    phrases = type_
+                    local_variables = {}
+                else:
+                    phrases = type_['phrases']
+                    local_variables = type_.get('variables', {})
+
+                variables = copy.copy(global_variables)
+                variables.update(local_variables)
+
+                for phrase in phrases:
                     template_phrase, test_phrase = phrase
-                    variables = type_['variables']
+
                     template = Template.create(morph, template_phrase, available_externals=variables.keys(), tech_vocabulary=tech_vocabulary)
 
                     vocabulary.add_phrase(phrase_key, template)

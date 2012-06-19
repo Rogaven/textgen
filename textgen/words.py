@@ -29,6 +29,19 @@ class WordBase(object):
         self.forms = tuple(forms)
         self.properties = tuple(properties)
 
+    @staticmethod
+    def _pluralize_args(number, args):
+        if number % 10 == 1 and number != 11:
+            args.update(u'ед')
+        elif 2 <= number % 10 <= 4 and not (12 <= number <= 14):
+            args.update(u'мн')
+        else:
+            args.update(u'мн')
+            if args.case in (u'им', u'вн'):
+                args.update(u'рд')
+
+        return args
+
     def get_form(self, args):
         raise NotImplementedError
 
@@ -119,16 +132,7 @@ class Noun(WordBase):
 
     @classmethod
     def pluralize_args(cls, number, args):
-        if number % 10 == 1 and number != 11:
-            args.update(u'ед')
-        elif 2 <= number % 10 <= 4 and not (12 <= number <= 14):
-            args.update(u'мн')
-        else:
-            args.update(u'мн')
-            if args.case == u'им':
-                args.update(u'рд')
-
-        return args
+        return cls._pluralize_args(number, args)
 
     def update_args(self, arguments, dependence, dependence_args):
         if isinstance(dependence, Noun):
@@ -187,16 +191,7 @@ class Adjective(WordBase):
 
     @classmethod
     def pluralize_args(cls, number, args):
-        if number % 10 == 1 and number != 11:
-            args.update(u'ед')
-        elif 2 <= number % 10 <= 4 and not (12 <= number <= 14):
-            args.update(u'мн')
-        else:
-            args.update(u'мн')
-            if args.case == u'им':
-                args.update(u'рд')
-
-        return args
+        return cls._pluralize_args(number, args)
 
 
     def update_args(self, arguments, dependence, dependence_args):
@@ -255,15 +250,7 @@ class Verb(WordBase):
 
     @classmethod
     def pluralize_args(cls, number, args):
-        if number % 10 == 1 and number != 11:
-            args.update(u'ед')
-        elif 2 <= number % 10 <= 4 and not (12 <= number <= 14):
-            args.update(u'мн')
-        else:
-            args.update(u'мн')
-            if args.case == u'им':
-                args.update(u'рд')
-        return args
+        return cls._pluralize_args(number, args)
 
     def update_args(self, arguments, dependence, dependence_args):
         if isinstance(dependence, Noun):

@@ -47,6 +47,17 @@ class NounTest(TestCase):
         self.assertEqual(noun.pluralize(33, Args()), u'монеты')
         self.assertEqual(noun.pluralize(36, Args()), u'монет')
 
+        self.assertEqual(noun.pluralize(1, Args(u'вн')), u'монету')
+        self.assertEqual(noun.pluralize(2, Args(u'вн')), u'монеты')
+        self.assertEqual(noun.pluralize(3, Args(u'вн')), u'монеты')
+        self.assertEqual(noun.pluralize(5, Args(u'вн')), u'монет')
+        self.assertEqual(noun.pluralize(10, Args(u'вн')), u'монет')
+        self.assertEqual(noun.pluralize(11, Args(u'вн')), u'монет')
+        self.assertEqual(noun.pluralize(12, Args(u'вн')), u'монет')
+        self.assertEqual(noun.pluralize(21, Args(u'вн')), u'монету')
+        self.assertEqual(noun.pluralize(33, Args(u'вн')), u'монеты')
+        self.assertEqual(noun.pluralize(36, Args(u'вн')), u'монет')
+
         self.assertEqual(noun.pluralize(1, Args(u'дт')), u'монете')
         self.assertEqual(noun.pluralize(2, Args(u'дт')), u'монетам')
         self.assertEqual(noun.pluralize(3, Args(u'дт')), u'монетам')
