@@ -129,7 +129,8 @@ dictionary.load(storage=DICTIONARY_STORAGE)
 
 for i in xrange(3):
     template = vocabulary.get_random_phrase('test_start')
-    print template.substitute(dictionary, {'hero': u'привидение', 'mob': u'крыса'})
+    # используем уже добалвенные слова, но поменяем их местами (по сравнению с проверочными в исходниках)
+    print template.substitute(dictionary, {'mob': u'привидение', 'hero': u'крыса'})
 
 ```
 
@@ -137,4 +138,11 @@ for i in xrange(3):
 ```bash
 python ./test_prepair.py
 python ./test.py
+```
+
+результат
+```
+Как крыса ни пыталась притвориться мертвой, привидение всё равно пошло в наступление
+ужасное привидение выскочило из кустов
+Как крыса ни пыталась притвориться мертвой, привидение всё равно пошло в наступление
 ```
