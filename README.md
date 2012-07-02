@@ -31,7 +31,15 @@ mkdir ./src
 mkdir ./storage
 ```
 
-создаём файл ./src/test.json c содержимым:
+### готовим
+
+Создаём базу исходников для наших фраз. Обратите внимание, на следующие вещи:
+
+- имя файла должно совпадать с полем prefix
+- фразы групируются по типам (иными словами - по контекстами)
+- для каждой фразы задаётся проверочная, т.к. очень просто допустить ошибку или опечатку в описании.                                            
+
+./src/test.json
 ```
 {
     "description": "",
@@ -65,12 +73,20 @@ mkdir ./storage
 }
 ```
 
-создаём файл ./tech.json
+Создаём вспомогательный словарь, в котором будет храниться дополнительная информация по словам, неоднозначно распознаваемым pymorphy. Для нас он не нужен, поэтому будет пустым.
+
+./tech.json
 ```
 {}
 ```
 
-создаём скрипт test_prepair.py
+Скрипт, компилирующий нашу базу из исходников. 
+Результат его работы попадает в каталог ./storage
+
+- ./storage/dictionary.json - формы используемых слов. Слова, попавшие в этот файл не перетираются и не удаляются при повторных импортах. Сделано так из-за существенного процента ошибок pymorphy, которые приходится устранять руками.
+- ./storage/vocabulary.json - скопилированые фразы
+
+test_prepair.py
 ```python
 # coding: utf-8
 import pymorphy
@@ -78,12 +94,13 @@ import pymorphy
 from textgen import logic as textgen_logic
 from textgen.conf import textgen_settings
 
-morph = pymorphy.get_morph(textgen_settings.PYMORPHY_DICTS_DIRECTORY)
+morph = pymorphy.get_morph(textgen_settings.PYMORPHY_DICTS_DIRECTORY) # см. документацию по pymorphy
 
 VOCABULARY_STORAGE = './storage/vocabulary.json'
 DICTIONARY_STORAGE = './storage/dictionary.json'
 TECH_VOCABULARY = './tech.json'
 
+# загружаем фразы и слова из них
 textgen_logic.import_texts(morph,
                            source_dir='./src/',
                            tech_vocabulary_path=TECH_VOCABULARY,
@@ -93,7 +110,9 @@ textgen_logic.import_texts(morph,
 
 ```
 
-создаём скрипт test.py
+основной код, выводит три фразы подряд
+
+test.py
 ```python
 # coding: utf-8
 
@@ -112,4 +131,10 @@ for i in xrange(3):
     template = vocabulary.get_random_phrase('test_start')
     print template.substitute(dictionary, {'hero': u'привидение', 'mob': u'крыса'})
 
+```
+
+### запускаем
+```bash
+python ./test_prepair.py
+python ./test.py
 ```
