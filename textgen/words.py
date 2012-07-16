@@ -31,6 +31,8 @@ class WordBase(object):
 
     @staticmethod
     def _pluralize_args(number, args):
+        number %= 100
+
         if number % 10 == 1 and number != 11:
             args.update(u'ед')
         elif 2 <= number % 10 <= 4 and not (12 <= number <= 14):
