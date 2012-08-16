@@ -81,7 +81,7 @@ class Args(object):
             if self.gender != u'мр': distance += 1
             if self.number == u'мн': distance += 1
 
-        elif class_ == u'ПРИЧАСТИЕ':
+        elif class_ in (u'ПРИЧАСТИЕ', u'КР_ПРИЧАСТИЕ'):
             if self.time != u'прш': distance += 1
             if self.case != u'им': distance += 1
             if self.gender != u'мр': distance += 1
@@ -242,8 +242,26 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
                         dictionary.add_word(word)
 
                     test_result = template.substitute(dictionary, variables)
-                    if efication(test_result.lower()) != efication(test_phrase.lower()):
-                        raise TextgenException(u'wrong test render for phrase "%s": "%s"' % (template_phrase, test_result))
+
+                    test_result_normalized = efication(test_result.lower())
+                    test_phrase_normalized = efication(test_phrase.lower())
+
+                    if test_result_normalized != test_phrase_normalized:
+                        msg = None
+                        for i in xrange(min(len(test_result_normalized), len(test_phrase_normalized))):
+                            if test_result_normalized[i] != test_phrase_normalized[i]:
+                                msg = '''
+wrong test_render for phrase "%s"
+
+prefix: "%s"
+
+diff: %s|%s''' % (template_phrase, test_result_normalized[:i], test_result_normalized[i], test_phrase_normalized[i])
+
+                        if msg is None:
+                            msg = 'different len: "%s"|"%s"' % (test_result_normalized[i:], test_phrase_normalized[i:])
+
+                        raise TextgenException(msg)
+
 
 
     vocabulary.save(storage=voc_storage)

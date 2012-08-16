@@ -77,6 +77,8 @@ class WordBase(object):
             return WORD_CONSTRUCTORS[WORD_TYPE.NOUN].create_from_baseword(morph, string, tech_vocabulary)
         elif class_ == u'П':
             return WORD_CONSTRUCTORS[WORD_TYPE.ADJECTIVE].create_from_baseword(morph, string, tech_vocabulary)
+        elif class_ == u'КР_ПРИЛ':
+            return WORD_CONSTRUCTORS[WORD_TYPE.ADJECTIVE].create_from_baseword(morph, string, tech_vocabulary)
         elif class_ == u'Г':
             return WORD_CONSTRUCTORS[WORD_TYPE.VERB].create_from_baseword(morph, string, tech_vocabulary)
         elif class_ == u'КР_ПРИЧАСТИЕ':
