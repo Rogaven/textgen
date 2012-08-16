@@ -6,7 +6,7 @@ import pymorphy
 
 from unittest import TestCase
 
-from textgen.words import Noun, Adjective, Verb, NounGroup, Fake
+from textgen.words import Noun, Adjective, Verb, NounGroup, Fake, Participle, ShortParticiple
 from textgen.templates import Args, Template, Dictionary, Vocabulary
 from textgen.conf import APP_DIR, textgen_settings
 from textgen.logic import import_texts
@@ -214,9 +214,6 @@ class NounGroupTest(TestCase):
         group = NounGroup.create_from_baseword(morph, u'тень автора')
         self.assertEqual(group.normalized, u'тень автора')
         self.assertEqual(group.properties, (u'жр',))
-        # for f in group.forms:
-        #     print f
-        # print group.forms[1]
         self.assertEqual(group.forms, (u'тень автора',
                                        u'тени автора',
                                        u'тени автора',
@@ -412,6 +409,138 @@ class VerbTest(TestCase):
         self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'побежали')
         self.assertRaises(NormalFormNeeded, Verb.create_from_baseword, morph, u'побежала')
         Verb.create_from_baseword(morph, u'побежал')
+
+
+class ParticipleTest(TestCase):
+
+    def test_create_from_baseword(self):
+        part = Participle.create_from_baseword(morph, u'летевший')
+        self.assertEqual(part.normalized, u'летевший')
+
+        self.assertEqual(part.forms, (u'летевший',
+                                      u'летевшего',
+                                      u'летевшему',
+                                      u'летевший',
+                                      u'летевшим',
+                                      u'летевшем',
+                                      u'летевшая',
+                                      u'летевшей',
+                                      u'летевшей',
+                                      u'летевшую',
+                                      u'летевшей',
+                                      u'летевшей',
+                                      u'летевшее',
+                                      u'летевшего',
+                                      u'летевшему',
+                                      u'летевшее',
+                                      u'летевшим',
+                                      u'летевшем',
+                                      u'летевшие',
+                                      u'летевших',
+                                      u'летевшим',
+                                      u'летевший',
+                                      u'летевшими',
+                                      u'летевших',
+                                      u'летящий',
+                                      u'летящего',
+                                      u'летящему',
+                                      u'летевший',
+                                      u'летящим',
+                                      u'летящем',
+                                      u'летящая',
+                                      u'летящей',
+                                      u'летящей',
+                                      u'летящую',
+                                      u'летящей',
+                                      u'летящей',
+                                      u'летящее',
+                                      u'летящего',
+                                      u'летящему',
+                                      u'летящее',
+                                      u'летящим',
+                                      u'летящем',
+                                      u'летящие',
+                                      u'летящих',
+                                      u'летящим',
+                                      u'летевший',
+                                      u'летящими',
+                                      u'летящих',))
+
+    def test_pluralize(self):
+        part = Participle.create_from_baseword(morph, u'летевший')
+        self.assertEqual(part.pluralize(1, Args(u'прш', u'жр')), u'летевшая')
+        self.assertEqual(part.pluralize(2, Args(u'прш', u'жр')), u'летевшие')
+        self.assertEqual(part.pluralize(3, Args(u'прш', u'жр')), u'летевшие')
+        self.assertEqual(part.pluralize(5, Args(u'прш', u'жр')), u'летевших')
+        self.assertEqual(part.pluralize(10, Args(u'прш', u'жр')), u'летевших')
+        self.assertEqual(part.pluralize(11, Args(u'прш', u'жр')), u'летевших')
+        self.assertEqual(part.pluralize(12, Args(u'прш', u'жр')), u'летевших')
+        self.assertEqual(part.pluralize(21, Args(u'прш', u'жр')), u'летевшая')
+        self.assertEqual(part.pluralize(33, Args(u'прш', u'жр')), u'летевшие')
+        self.assertEqual(part.pluralize(36, Args(u'прш', u'жр')), u'летевших')
+
+
+    def test_serialization(self):
+        part_1 = Participle.create_from_baseword(morph, u'бежал')
+        data = part_1.serialize()
+
+        part_2 = Participle.deserialize(data)
+
+        self.assertEqual(part_1.normalized , part_2.normalized)
+        self.assertEqual(part_1.forms, part_2.forms)
+        self.assertEqual(part_1.properties, part_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, Participle.create_from_baseword, morph, u'летящий')
+        self.assertRaises(NormalFormNeeded, Participle.create_from_baseword, morph, u'летевшая')
+        self.assertRaises(NormalFormNeeded, Participle.create_from_baseword, morph, u'летевшого')
+        self.assertRaises(NormalFormNeeded, Participle.create_from_baseword, morph, u'летевшие')
+        Participle.create_from_baseword(morph, u'летевший')
+
+
+class ShortParticipleTest(TestCase):
+
+    def test_create_from_baseword(self):
+        part = ShortParticiple.create_from_baseword(morph, u'исцелён')
+        self.assertEqual(part.normalized, u'исцелён')
+
+        self.assertEqual(part.forms, (u'исцелен',
+                                      u'исцелена',
+                                      u'исцелено',
+                                      u'исцелены',
+                                      u'исцелен',
+                                      u'исцелен',
+                                      u'исцелен',
+                                      u'исцелен'))
+
+    def test_pluralize(self):
+        part = ShortParticiple.create_from_baseword(morph, u'исцелён')
+        self.assertEqual(part.pluralize(1, Args(u'прш', u'жр')), u'исцелена')
+        self.assertEqual(part.pluralize(2, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(3, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(5, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(10, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(11, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(12, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(21, Args(u'прш', u'жр')), u'исцелена')
+        self.assertEqual(part.pluralize(33, Args(u'прш', u'жр')), u'исцелены')
+        self.assertEqual(part.pluralize(36, Args(u'прш', u'жр')), u'исцелены')
+
+
+    def test_serialization(self):
+        part_1 = ShortParticiple.create_from_baseword(morph, u'исцелён')
+        data = part_1.serialize()
+
+        part_2 = Participle.deserialize(data)
+
+        self.assertEqual(part_1.normalized , part_2.normalized)
+        self.assertEqual(part_1.forms, part_2.forms)
+        self.assertEqual(part_1.properties, part_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, ShortParticiple.create_from_baseword, morph, u'исцелена')
+        self.assertRaises(NormalFormNeeded, ShortParticiple.create_from_baseword, morph, u'исцелены')
+        ShortParticiple.create_from_baseword(morph, u'исцелён')
 
 
 class DictionaryTest(TestCase):
