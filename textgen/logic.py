@@ -14,6 +14,7 @@ class PROPERTIES(object):
     GENDERS = (u'мр', u'жр', u'ср') # REMBER about 'мн' case in pymorphy
     TIMES = (u'нст', u'прш', u'буд')
     PERSONS = (u'1л', u'2л', u'3л')
+    WORD_CASE = (u'строч', u'загл',)
 
     @classmethod
     def is_argument_available(cls, arg):
@@ -22,12 +23,13 @@ class PROPERTIES(object):
                 arg in cls.NUMBERS or
                 arg in cls.GENDERS or
                 arg in cls.TIMES or
-                arg in cls.PERSONS)
+                arg in cls.PERSONS or
+                arg in cls.WORD_CASE)
 
 
 class Args(object):
 
-    __slots__ = ('case', 'number', 'gender', 'time', 'person')
+    __slots__ = ('case', 'number', 'gender', 'time', 'person', 'word_case')
 
     def __init__(self, *args):
         self.case = u'им'
@@ -35,6 +37,7 @@ class Args(object):
         self.gender = u'мр'
         self.time = u'нст'
         self.person = u'1л'
+        self.word_case = u'строч'
         # self.case = u''
         # self.number = u''
         # self.gender = u''
@@ -43,7 +46,7 @@ class Args(object):
         self.update(*args)
 
     def get_copy(self):
-        return self.__class__(self.case, self.number, self.gender, self.time, self.person)
+        return self.__class__(self.case, self.number, self.gender, self.time, self.person, self.word_case)
 
     def update(self, *args):
         for arg in args:
@@ -57,6 +60,8 @@ class Args(object):
                 self.time = arg
             elif arg in PROPERTIES.PERSONS:
                 self.person = arg
+            elif arg in PROPERTIES.WORD_CASE:
+                self.word_case = arg
 
         # if world exists only in multiple number (ножницы) there will be 2 u'мн' values - one for gender and one for number
         if args.count(u'мн') > 1:
@@ -97,7 +102,7 @@ class Args(object):
 
 
     def __unicode__(self):
-        return (u'<%s, %s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time, self.person))
+        return (u'<%s, %s, %s, %s, %s, %s>' % (self.case, self.number, self.gender, self.time, self.person, self.word_case))
 
     def __str__(self): return self.__unicode__().encode('utf-8')
 

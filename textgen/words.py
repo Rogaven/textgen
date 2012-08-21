@@ -49,6 +49,14 @@ class WordBase(object):
         return args
 
     def get_form(self, args):
+        word = self._get_form(args)
+
+        if args.word_case == u'загл':
+            word = word[0].upper() + word[1:]
+
+        return word
+
+    def _get_form(self, args):
         raise NotImplementedError
 
     @property
@@ -117,7 +125,7 @@ class Fake(WordBase):
     def __init__(self, word):
         super(Fake, self).__init__(normalized=word.lower())
 
-    def get_form(self, args):
+    def _get_form(self, args):
         return self.normalized
 
     @classmethod
@@ -135,7 +143,7 @@ class Noun(WordBase):
     @property
     def gender(self): return self.properties[0]
 
-    def get_form(self, args):
+    def _get_form(self, args):
         if not self.forms:
             return self.normalized
         return self.forms[PROPERTIES.NUMBERS.index(args.number) * len(PROPERTIES.CASES) + PROPERTIES.CASES.index(args.case)]
@@ -179,7 +187,7 @@ class Numeral(WordBase):
     def __init__(self, number):
         super(Numeral, self).__init__(normalized=number)
 
-    def get_form(self, args):
+    def _get_form(self, args):
         return self.normalized
 
     def update_args(self, arguments, dependence, dependence_args):
@@ -190,7 +198,7 @@ class Adjective(WordBase):
 
     TYPE = WORD_TYPE.ADJECTIVE
 
-    def get_form(self, args):
+    def _get_form(self, args):
         if not self.forms:
             return self.normalized
 
@@ -245,7 +253,7 @@ class Verb(WordBase):
 
     TYPE = WORD_TYPE.VERB
 
-    def get_form(self, args):
+    def _get_form(self, args):
 
         if not self.forms:
             return self.normalized
@@ -313,7 +321,7 @@ class Participle(WordBase):
 
     TYPE = WORD_TYPE.PARTICIPLE
 
-    def get_form(self, args):
+    def _get_form(self, args):
 
         if not self.forms:
             return self.normalized
@@ -373,7 +381,7 @@ class ShortParticiple(WordBase):
 
     TYPE = WORD_TYPE.SHORT_PARTICIPLE
 
-    def get_form(self, args):
+    def _get_form(self, args):
 
         if not self.forms:
             return self.normalized

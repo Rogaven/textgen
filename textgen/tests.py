@@ -640,6 +640,7 @@ class TemplateTest(TestCase):
         self.dictionary.add_word(Noun.create_from_baseword(morph, u'тень'))
         self.dictionary.add_word(Adjective.create_from_baseword(morph, u'глупый'))
         self.dictionary.add_word(Verb.create_from_baseword(morph, u'ударил'))
+        self.dictionary.add_word(Verb.create_from_baseword(morph, u'подставил'))
         self.dictionary.add_word(Adjective.create_from_baseword(morph, u'целый'))
 
     def test_externals(self):
@@ -722,6 +723,11 @@ class TemplateTest(TestCase):
     def test_fake_substitutions(self):
         template = Template.create(morph, u'[{глупый|hero|рд}] [[hero|рд]]')
         self.assertEqual(template.substitute(self.dictionary, {'hero': Fake(u'19x5')} ), u'глупого 19x5')
+
+    def test_upper_case(self):
+        template = Template.create(morph, u'Первое предложение. [{подставил|hero|прш,загл}] слово в начало, а затем вставим имя от [[hero|рд]]. [[shadow|загл]] пришла.')
+        result = template.substitute(self.dictionary, {'hero': (u'обезьянка', u'загл'), 'shadow': u'тень'} )
+        self.assertEqual(result, u'Первое предложение. Подставила слово в начало, а затем вставим имя от Обезьянки. Тень пришла.')
 
 
 class LoadDataTest(TestCase):
