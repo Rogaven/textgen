@@ -248,8 +248,8 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
                     test_result = template.substitute(dictionary, variables)
 
-                    test_result_normalized = efication(test_result.lower())
-                    test_phrase_normalized = efication(test_phrase.lower())
+                    test_result_normalized = efication(test_result)
+                    test_phrase_normalized = efication(test_phrase)
 
                     if test_result_normalized != test_phrase_normalized:
                         msg = None
