@@ -71,7 +71,7 @@ class Args(object):
     def order_points(self, class_):
         distance = 0
 
-        if class_ == u'С':
+        if class_ in (u'С', u'МС'):
             if self.case != u'им': distance += 1
             # priority has forms with multiply gender, like "трусы"
             if self.number == u'мн' and self.gender != u'мн': distance += 1
@@ -261,6 +261,7 @@ wrong test_render for phrase "%s"
 prefix: "%s"
 
 diff: %s|%s''' % (template_phrase, test_result_normalized[:i], test_result_normalized[i], test_phrase_normalized[i])
+                                break
 
                         if msg is None:
                             msg = 'different len: "%s"|"%s"' % (test_result_normalized[i:], test_phrase_normalized[i:])
