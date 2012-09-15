@@ -71,7 +71,7 @@ class Args(object):
     def order_points(self, class_):
         distance = 0
 
-        if class_ in (u'С', u'МС'):
+        if class_ in (u'С',):
             if self.case != u'им': distance += 1
             # priority has forms with multiply gender, like "трусы"
             if self.number == u'мн' and self.gender != u'мн': distance += 1
@@ -81,7 +81,7 @@ class Args(object):
             if self.gender != u'мр': distance += 1
             if self.number == u'мн': distance += 1
 
-        elif class_ in (u'П', u'КР_ПРИЛ', u'МС-П'):
+        elif class_ in (u'П', u'КР_ПРИЛ', u'МС-П', u'МС'):
             if self.case != u'им': distance += 1
             if self.gender != u'мр': distance += 1
             if self.number == u'мн': distance += 1

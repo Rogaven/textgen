@@ -6,7 +6,7 @@ import pymorphy
 
 from unittest import TestCase
 
-from textgen.words import Noun, Adjective, Verb, NounGroup, Fake, Participle, ShortParticiple
+from textgen.words import Noun, Adjective, Verb, NounGroup, Fake, Participle, ShortParticiple, Pronoun
 from textgen.templates import Args, Template, Dictionary, Vocabulary
 from textgen.conf import APP_DIR, textgen_settings
 from textgen.logic import import_texts
@@ -237,7 +237,7 @@ class AdjectiveTest(TestCase):
     def test_create_from_baseword(self):
         adj = Adjective.create_from_baseword(morph, u'глупый')
         self.assertEqual(adj.normalized, u'глупый')
-        self.assertEqual(adj.forms[18], (u'глупый',
+        self.assertEqual(adj.forms, (u'глупый',
                                      u'глупого',
                                      u'глупому',
                                      u'глупый',
@@ -260,7 +260,7 @@ class AdjectiveTest(TestCase):
                                      u'глупым',
                                      u'глупый', #???????? possible bug in pymorphy
                                      u'глупыми',
-                                     u'глупых')[18])
+                                     u'глупых'))
 
     def test_pluralize(self):
         adj = Adjective.create_from_baseword(morph, u'красивый')
@@ -313,6 +313,54 @@ class AdjectiveTest(TestCase):
 
     def test_normal_form(self):
         self.assertRaises(NormalFormNeeded, Adjective.create_from_baseword, morph, u'добрые')
+
+
+class PronounTest(TestCase):
+
+    def test_create_from_baseword(self):
+        pronoun = Pronoun.create_from_baseword(morph, u'он')
+        self.assertEqual(pronoun.normalized, u'он')
+        self.assertEqual(pronoun.forms, (u'он',
+                                     u'его',
+                                     u'ему',
+                                     u'его',
+                                     u'им',
+                                     u'нем',
+                                     u'она',
+                                     u'ее',
+                                     u'ей',
+                                     u'ее',
+                                     u'ей',
+                                     u'ней',
+                                     u'оно',
+                                     u'его',
+                                     u'ему',
+                                     u'его',
+                                     u'им',
+                                     u'нём',
+                                     u'они',
+                                     u'их',
+                                     u'им',
+                                     u'их',
+                                     u'ими',
+                                     u'них'))
+
+    def test_pluralize(self):
+        # now I can't write correct test for pluralization of pronouns, let wait for some bugs in text generation
+        pass
+
+    def test_serialization(self):
+        pronoun_1 = Pronoun.create_from_baseword(morph, u'он')
+        data = pronoun_1.serialize()
+
+        pronoun_2 = Pronoun.deserialize(data)
+
+        self.assertEqual(pronoun_1.normalized , pronoun_2.normalized)
+        self.assertEqual(pronoun_1.forms, pronoun_2.forms)
+        self.assertEqual(pronoun_1.properties, pronoun_2.properties)
+
+    def test_normal_form(self):
+        self.assertRaises(NormalFormNeeded, Pronoun.create_from_baseword, morph, u'они')
 
 
 class VerbTest(TestCase):

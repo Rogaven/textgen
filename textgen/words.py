@@ -12,6 +12,7 @@ class WORD_TYPE:
     FAKE = 6
     PARTICIPLE = 7
     SHORT_PARTICIPLE = 8
+    PRONOUN = 9
 
 WORD_TYPES_IDS_TO_WORD_TYPES = {u'сущ': WORD_TYPE.NOUN,
                                 u'прил': WORD_TYPE.ADJECTIVE,
@@ -20,7 +21,8 @@ WORD_TYPES_IDS_TO_WORD_TYPES = {u'сущ': WORD_TYPE.NOUN,
                                 u'сущ гр': WORD_TYPE.NOUN_GROUP,
                                 u'фальш': WORD_TYPE.FAKE,
                                 u'прич': WORD_TYPE.PARTICIPLE,
-                                u'кр прич': WORD_TYPE.SHORT_PARTICIPLE}
+                                u'кр прич': WORD_TYPE.SHORT_PARTICIPLE,
+                                u'мс': WORD_TYPE.PRONOUN}
 
 WORD_CONSTRUCTORS = {}
 
@@ -98,7 +100,7 @@ class WordBase(object):
         elif class_ == u'КР_ПРИЧАСТИЕ':
             return WORD_CONSTRUCTORS[WORD_TYPE.SHORT_PARTICIPLE].create_from_baseword(morph, string, tech_vocabulary)
         elif class_ == u'МС':
-            return WORD_CONSTRUCTORS[WORD_TYPE.NOUN].create_from_baseword(morph, string, tech_vocabulary)
+            return WORD_CONSTRUCTORS[WORD_TYPE.PRONOUN].create_from_baseword(morph, string, tech_vocabulary)
         elif class_ == u'МС-П':
             return WORD_CONSTRUCTORS[WORD_TYPE.ADJECTIVE].create_from_baseword(morph, string, tech_vocabulary)
         else:
@@ -247,6 +249,36 @@ class Adjective(WordBase):
             forms.append(morph.inflect_ru(normalized, u'%s,%s' % (case, u'мн'), class_).lower() )
 
         return cls(normalized=src, forms=forms, properties=[])
+
+
+class Pronoun(Adjective):
+
+    TYPE = WORD_TYPE.PRONOUN
+
+    @classmethod
+    def create_from_baseword(cls, morph, src, tech_vocabulary={}):
+        normalized = efication(src.upper())
+
+        # pymorphy do not change gender of PRONOUNS, and we always need some words, so we hardcode them
+
+        if normalized == u'ОН':
+            return cls(normalized=src,
+                       forms=(u'он', u'его', u'ему', u'его', u'им', u'нем',
+                              u'она', u'ее', u'ей', u'ее', u'ей', u'ней',
+                              u'оно', u'его', u'ему', u'его', u'им', u'нём',
+                              u'они', u'их', u'им', u'их',  u'ими', u'них'),
+                       properties=[])
+
+        if normalized == u'Я':
+            return cls(normalized=src,
+                       forms=(u'я', u'меня', u'мне', u'меня', u'мной', u'мне',
+                              u'я', u'меня', u'мне', u'меня', u'мной', u'мне',
+                              u'я', u'меня', u'мне', u'меня', u'мной', u'мне',
+                              u'я', u'меня', u'мне', u'меня', u'мной', u'мне'),
+                       properties=[])
+
+        return Adjective.create_from_baseword(morph, src, tech_vocabulary)
+
 
 
 class Verb(WordBase):
