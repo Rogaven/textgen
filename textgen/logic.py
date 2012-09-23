@@ -219,6 +219,8 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
             for suffix, type_ in data['types'].items():
                 phrase_key = '%s_%s' % (group , suffix)
 
+                vocabulary.register_type(phrase_key)
+
                 if isinstance(type_, list):
                     phrases = type_
                     local_variables = {}

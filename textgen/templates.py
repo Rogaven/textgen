@@ -62,13 +62,21 @@ class Vocabulary(object):
 
     def add_phrase(self, type_, template):
         if type_ not in self.data:
-            self.data[type_] = []
+            raise TextgenException('type %s has not registered in vocabulary' % type_)
         self.data[type_].append(template)
 
-    def get_random_phrase(self, type_, default=None):
+    def register_type(self, type_):
         if type_ in self.data:
+            raise TextgenException('type %s has already registered in vocabulary' % type_)
+        self.data[type_] = []
+
+    def get_random_phrase(self, type_, default=None):
+        if type_ in self.data and self.data[type_]:
             return random.choice(self.data[type_])
         return default
+
+    def __contains__(self, type_):
+        return type_ in self.data
 
     def clear(self):
         self.data = {}
