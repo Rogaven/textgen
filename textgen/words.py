@@ -141,9 +141,14 @@ class Fake(WordBase):
 class Noun(WordBase):
 
     TYPE = WORD_TYPE.NOUN
+    FORMS_NUMBER = len(PROPERTIES.NUMBERS) * len(PROPERTIES.CASES)
 
     @property
     def gender(self): return self.properties[0]
+
+    @property
+    def is_valid(self):
+        return len(self.forms) == self.FORMS_NUMBER
 
     def _get_form(self, args):
         if not self.forms:
