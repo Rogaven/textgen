@@ -118,6 +118,11 @@ class WordBase(object):
                                                forms=data['forms'],
                                                properties=data['properties'])
 
+    def __eq__(self, other):
+        return (self.normalized == other.normalized and
+                self.forms == other.forms and
+                self.properties == other.properties)
+
 
 
 class Fake(WordBase):
