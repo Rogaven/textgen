@@ -190,7 +190,7 @@ class Template(object):
                 arguments = Args()
             elif isinstance(normalized, WordBase):
                 word = normalized
-                arguments = Args()
+                arguments = Args(*word.properties)
             else:
                 word = dictionary.get_word(efication(normalized))
                 arguments = Args(*word.properties)
