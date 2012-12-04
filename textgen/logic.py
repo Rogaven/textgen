@@ -170,11 +170,38 @@ def get_tech_vocabulary(tech_vocabulary_path):
     return tech_vocabulary
 
 
+def get_user_data_for_module(module):
+
+    if 'name' not in module or 'description' not in module:
+        return None
+
+    data = {'name': module['name'],
+            'description': module['description'],
+            'types': {}}
+
+    prefix = module['prefix']
+
+    for suffix, type_data in module['types'].items():
+        if 'name' not in type_data or 'description' not in type_data:
+            continue
+
+        variables = module.get('variables', {})
+        variables.update(type_data.get('variables', {}))
+
+        data['types']['%s_%s' % (prefix , suffix)] = {'name': type_data['name'],
+                                                      'description': type_data['description'],
+                                                      'example': type_data['phrases'][0][1],
+                                                      'variables': variables.keys() }
+
+    return data
+
 def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False):
     from textgen.templates import Dictionary, Vocabulary, Template
     from textgen.words import WordBase
 
     vocabulary = Vocabulary()
+
+    user_data = {'modules': {}}
 
     if os.path.exists(voc_storage):
         vocabulary.load(storage=voc_storage)
@@ -213,6 +240,8 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
             for suffix in data['types']:
                 if suffix == '':
                     raise Exception('type MUST be not equal to empty string')
+
+            user_data['modules'][data['prefix']] = get_user_data_for_module(data)
 
             global_variables = data.get('variables', {})
 
@@ -274,3 +303,5 @@ diff: %s|%s''' % (template_phrase, test_result_normalized[:i], test_result_norma
 
     vocabulary.save(storage=voc_storage)
     dictionary.save(storage=dict_storage)
+
+    return user_data
