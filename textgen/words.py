@@ -402,7 +402,7 @@ class Participle(WordBase):
         except NoGrammarFound:
             return cls(normalized=src)
 
-        if u'прш' != properties.time or u'ед' != properties.number or u'мр' != properties.gender or u'им' != properties.case:
+        if properties.time not in (u'прш', u'нст') or u'ед' != properties.number or u'мр' != properties.gender or u'им' != properties.case:
             raise NormalFormNeeded(u'word "%s" not in normal form: %s' % (src, properties))
 
         forms = []
