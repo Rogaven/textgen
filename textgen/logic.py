@@ -181,6 +181,8 @@ def get_user_data_for_module(module):
 
     prefix = module['prefix']
 
+    variables_verbose = module['variables_verbose']
+
     for suffix, type_data in module['types'].items():
         if 'name' not in type_data or 'description' not in type_data:
             continue
@@ -191,7 +193,9 @@ def get_user_data_for_module(module):
         data['types']['%s_%s' % (prefix , suffix)] = {'name': type_data['name'],
                                                       'description': type_data['description'],
                                                       'example': type_data['phrases'][0][1],
-                                                      'variables': variables.keys() }
+                                                      'variables': variables.keys()}
+
+    data['variables_verbose'] = variables_verbose
 
     return data
 
@@ -243,7 +247,13 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
             user_data['modules'][data['prefix']] = get_user_data_for_module(data)
 
+            variables_verbose = data['variables_verbose']
+
             global_variables = data.get('variables', {})
+
+            for variable_name in global_variables.keys():
+                if not variables_verbose.get(variable_name):
+                    raise Exception('no verbose name for variable "%s"' % variable_name)
 
             for suffix, type_ in data['types'].items():
                 phrase_key = '%s_%s' % (group , suffix)
@@ -256,6 +266,10 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
                 else:
                     phrases = type_['phrases']
                     local_variables = type_.get('variables', {})
+
+                for variable_name in local_variables.keys():
+                    if not variables_verbose.get(variable_name):
+                        raise Exception('no verbose name for variable "%s"' % variable_name)
 
                 variables = copy.copy(global_variables)
                 variables.update(local_variables)
