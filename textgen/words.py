@@ -131,9 +131,10 @@ class Fake(WordBase):
 
     def __init__(self, word):
         super(Fake, self).__init__(normalized=word.lower())
+        self.forms = [word]
 
     def _get_form(self, args):
-        return self.normalized
+        return self.forms[0]
 
     @classmethod
     def pluralize_args(cls, number, args):
