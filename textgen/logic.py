@@ -3,7 +3,6 @@ import os
 import json
 import copy
 import numbers
-import tempfile
 
 from textgen.exceptions import NoGrammarFound, TextgenException
 
@@ -188,7 +187,7 @@ def get_user_data_for_module(module):
         if 'name' not in type_data or 'description' not in type_data:
             continue
 
-        variables = module.get('variables', {})
+        variables = copy.deepcopy(module.get('variables', {}))
         variables.update(type_data.get('variables', {}))
 
         data['types']['%s_%s' % (prefix , suffix)] = {'name': type_data['name'],
@@ -197,6 +196,7 @@ def get_user_data_for_module(module):
                                                       'variables': variables.keys()}
 
     data['variables_verbose'] = variables_verbose
+
 
     return data
 
