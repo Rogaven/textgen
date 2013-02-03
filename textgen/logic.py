@@ -3,6 +3,7 @@ import os
 import json
 import copy
 import numbers
+import tempfile
 
 from textgen.exceptions import NoGrammarFound, TextgenException
 
@@ -199,7 +200,7 @@ def get_user_data_for_module(module):
 
     return data
 
-def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, debug=False):
+def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_storage, tmp_dir='/tmp', check=False):
     from textgen.templates import Dictionary, Vocabulary, Template
     from textgen.words import WordBase
 
@@ -207,8 +208,9 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
     user_data = {'modules': {}}
 
-    if os.path.exists(voc_storage):
-        vocabulary.load(storage=voc_storage)
+    if not check:
+        if os.path.exists(voc_storage):
+            vocabulary.load(storage=voc_storage)
 
     dictionary = Dictionary()
     if os.path.exists(dict_storage):
@@ -232,8 +234,14 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
 
         group = filename[:-5]
 
-        if debug:
-            print 'load %s' % group
+        if check:
+            check_path = os.path.join(tmp_dir, 'textgen-files-check-'+filename)
+
+            if os.path.exists(check_path) and os.path.getmtime(check_path) > os.path.getmtime(texts_path):
+                print 'group "%s" has been already processed' % group
+                continue
+
+        print 'load "%s"' % group
 
         with open(texts_path) as f:
             data = json.loads(f.read())
@@ -313,9 +321,12 @@ diff: %s|%s''' % (template_phrase, test_result_normalized[:i], test_result_norma
 
                         raise TextgenException(msg)
 
+        if check:
+            with open(check_path, 'w') as f:
+                f.write('1')
 
-
-    vocabulary.save(storage=voc_storage)
-    dictionary.save(storage=dict_storage)
+    if not check:
+        vocabulary.save(storage=voc_storage)
+        dictionary.save(storage=dict_storage)
 
     return user_data
