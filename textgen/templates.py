@@ -15,7 +15,7 @@ class Dictionary(object):
         self.data = {}
 
     def add_word(self, word, overwrite=False):
-        if not overwrite and word.normalized in self.data:
+        if not overwrite and efication(word.normalized) in self.data:
             # TODO: add test
             return
         self.data[efication(word.normalized)] = word
