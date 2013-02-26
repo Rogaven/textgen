@@ -54,6 +54,9 @@ class Dictionary(object):
                 result.append(key)
         return result
 
+    def __contains__(self, value):
+        return value in self.data
+
 
 class Vocabulary(object):
 

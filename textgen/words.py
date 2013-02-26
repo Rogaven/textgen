@@ -149,6 +149,12 @@ class Noun(WordBase):
     TYPE = WORD_TYPE.NOUN
     FORMS_NUMBER = len(PROPERTIES.NUMBERS) * len(PROPERTIES.CASES)
 
+    @classmethod
+    def fast_construct(cls, base_word):
+        return cls(normalized=base_word,
+                   forms=[base_word] * cls.FORMS_NUMBER,
+                   properties=(u'мр',))
+
     @property
     def gender(self): return self.properties[0]
 
