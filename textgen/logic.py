@@ -296,10 +296,7 @@ def import_texts(morph, source_dir, tech_vocabulary_path, voc_storage, dict_stor
                         dictionary.add_word(word)
 
                     for string in template.get_internal_words():
-                        try:
-                            word = WordBase.create_from_string(morph, string, tech_vocabulary)
-                        except:
-                            raise Exception('exception while processing word: "%s"' % (string, ))
+                        word = WordBase.create_from_string(morph, string, tech_vocabulary)
                         dictionary.add_word(word)
 
                     test_result = template.substitute(dictionary, variables)
